@@ -1,0 +1,27 @@
+{
+  "name": "signalr-pipe",
+  "version": "1.1.0",
+  "description": "ASP.NET Core SignalR Named Pipe Client",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "typings": "./dist/esm/index.d.ts",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "clean": "node ../common/node_modules/rimraf/bin.js ./dist",
+    "build": "npm run clean && npm run build:esm && npm run build:cjs",
+    "build:lint": "node ../common/node_modules/tslint/bin/tslint -c ../tslint.json -p ./tsconfig.json",
+    "build:esm": "node ../common/node_modules/typescript/bin/tsc --project ./tsconfig.json --module es2015 --outDir ./dist/esm -d",
+    "build:cjs": "node ../common/node_modules/typescript/bin/tsc --project ./tsconfig.json --module commonjs --outDir ./dist/cjs"
+  },
+  "author": "David Serfozo",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@aspnet/signalr": "^1.1.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^23.3.10",
+    "@types/node": "^10.12.18"
+  }
+}

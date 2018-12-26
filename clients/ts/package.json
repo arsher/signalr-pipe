@@ -1,0 +1,11 @@
+{
+  "name": "client-ts",
+  "version": "0.0.0",
+  "description": "",
+  "scripts": {
+    "build": "cd ./signalr-pipe && npm run build",
+    "test": "node ./common/node_modules/jest/bin/jest.js --config ./jest.config.js"
+  },
+  "author": "David Serfozo",
+  "license": "Apache-2.0"
+}
