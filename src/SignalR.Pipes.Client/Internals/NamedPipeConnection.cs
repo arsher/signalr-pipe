@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace SignalR.Pipes.Client
 {
-    public sealed class NamedPipeConnection : ConnectionContext, IConnectionInherentKeepAliveFeature
+    internal sealed class NamedPipeConnection : ConnectionContext, IConnectionInherentKeepAliveFeature
     {
         private readonly SemaphoreSlim connectionLock = new SemaphoreSlim(1, 1);
         private readonly NamedPipeConnectionOptions options;
@@ -21,7 +21,7 @@ namespace SignalR.Pipes.Client
         public override string ConnectionId
         {
             get => connectionId;
-            set => throw new InvalidOperationException("The ConnectionId is not used.");
+            set => throw new InvalidOperationException("The ConnectionId is set automatically.");
         }
 
         public override IFeatureCollection Features { get; } = new FeatureCollection();
@@ -97,7 +97,7 @@ namespace SignalR.Pipes.Client
                     {
                         await transport.StopAsync().ConfigureAwait(false);
                     }
-                    catch (Exception ex)
+                    catch (Exception)
                     {
                     }
                 }

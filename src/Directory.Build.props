@@ -1,0 +1,9 @@
+<Project>
+    <Import Project="..\Directory.Build.props" />
+
+    <PropertyGroup>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <PackageTags>aspnetcore;signalr;namedpipe</PackageTags>
+        <PackageOutputPath>$(MSBuildThisFileDirectory)..\artifacts</PackageOutputPath>
+    </PropertyGroup>
+</Project>

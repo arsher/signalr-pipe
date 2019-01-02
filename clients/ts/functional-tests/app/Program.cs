@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
+using SignalR.Pipes.Common;
 
 namespace FunctionalTests
 {
@@ -30,8 +31,17 @@ namespace FunctionalTests
                 }
             }
 
+            var uri = new Uri(url);
+
+            var hostUrlBuilder = new UriBuilder();
+            hostUrlBuilder.Scheme = uri.Scheme;
+            hostUrlBuilder.Host = uri.Host; 
+
+            Console.WriteLine($"Using host url: {hostUrlBuilder.Uri}");
+
             var host = new HostBuilder()
                     .UseConsoleLifetime()
+                    .UseHostUri(hostUrlBuilder.Uri)
                    .ConfigureLogging((hostContext, configLogging) =>
                    {
                        //configLogging.ClearProviders();
@@ -47,8 +57,11 @@ namespace FunctionalTests
                                 // we are running the same tests with JSON and MsgPack protocols and having
                                 // consistent casing makes it cleaner to verify results
                                 options.PayloadSerializerSettings.ContractResolver = new DefaultContractResolver();
-                            })
-                            .AddHub<TestHub>(url);
+                            });
+                    })
+                    .UseSignalR(c => 
+                    {
+                        c.MapHub<TestHub>(uri.AbsolutePath);
                     })
                     .Build();
             await host.RunAsync();

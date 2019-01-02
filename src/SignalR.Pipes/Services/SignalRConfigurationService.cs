@@ -6,50 +6,49 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using SignalR.Pipes.Connections;
-using System.Collections.Generic;
-using Microsoft.AspNetCore.Connections;
 using SignalR.Pipes.Common;
+using SignalR.Pipes.Routing;
+using Microsoft.Extensions.Logging;
+using System.IO.Pipes;
 
 namespace SignalR.Pipes.Services
 {
-    public class SignalRConfigurationService : IHostedService
+    internal sealed class SignalRConfigurationService : IHostedService
     {
-        private readonly HubRouteOptions hubRouteOptions;
+        private readonly HostOptions hostOptions;
         private readonly IServiceProvider serviceProvider;
+        private NamedPipeServer pipeServer;
 
-        public SignalRConfigurationService(IServiceProvider serviceProvider, IOptions<HubRouteOptions> hubRouteOptions)
+        public SignalRConfigurationService(IServiceProvider serviceProvider, IOptions<HostOptions> hostOptions)
         {
-            this.hubRouteOptions = hubRouteOptions.Value;
             this.serviceProvider = serviceProvider;
+            this.hostOptions = hostOptions.Value;
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            var serverManager = serviceProvider.GetRequiredService<NamedPipeServerManager>();
-            var dispatcher = serviceProvider.GetRequiredService<NamedPipeConnectionDispatcher>();
-            foreach (var hubRoute in hubRouteOptions.HubMap)
-            {
-                await StartRouteAsync(serverManager, dispatcher, hubRoute);
-            }
+            var pipeName = PipeUri.GetAcceptorName(hostOptions.Uri);
+            pipeServer = new NamedPipeServer(pipeName, serviceProvider.GetRequiredService<ILoggerFactory>(), BuildRequestPipeline());
+
+            await pipeServer.StartAsync().ConfigureAwait(false);
         }
 
-        public Task StopAsync(CancellationToken cancellationToken)
+        public async Task StopAsync(CancellationToken cancellationToken)
         {
-            return Task.CompletedTask;
+            await (pipeServer?.DisposeAsync() ?? Task.CompletedTask).ConfigureAwait(false);
         }
 
-        private async Task StartRouteAsync(NamedPipeServerManager serverManager, NamedPipeConnectionDispatcher dispatcher, KeyValuePair<Uri, Action<IConnectionBuilder>> hubRoute)
+        private Func<NamedPipeServerStream, CancellationToken, Task> BuildRequestPipeline()
         {
-            var hubUri = hubRoute.Key;
-            var hubConfigure = hubRoute.Value;
+            var routeBuilder = new RouteBuilder();
+            var connectionsRouteBuilder = new ConnectionsRouteBuilder(serviceProvider, routeBuilder);
+            var hubRouteBuilder = new HubRouteBuilder(connectionsRouteBuilder);
+            hostOptions.Configure(hubRouteBuilder);
 
-            var builder = new ConnectionBuilder(serviceProvider);
-            hubConfigure(builder);
-            var connection = builder.Build();
-
-            var pipeName = PipeUri.GetAcceptorName(hubUri);
-
-            await serverManager.CreateServerAsync(pipeName, (npc, token) => dispatcher.ExecuteAsync(npc, connection, token)).ConfigureAwait(false);
+            var routerDelegate = routeBuilder.Build();
+            var connectionDispatcher = new NamedPipeConnectionDispatcher(routerDelegate);
+            Func<NamedPipeServerStream, CancellationToken, Task> executeDelegate = connectionDispatcher.ExecuteAsync;
+            return executeDelegate;
         }
     }
 }

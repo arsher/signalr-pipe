@@ -1,6 +1,6 @@
 {
   "name": "signalr-pipe",
-  "version": "1.1.0",
+  "version": "1.0.0",
   "description": "ASP.NET Core SignalR Named Pipe Client",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",

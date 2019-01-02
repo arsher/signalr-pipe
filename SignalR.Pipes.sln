@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.168
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28407.52
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SignalR.Pipes", "src\SignalR.Pipes\SignalR.Pipes.csproj", "{9ECE1641-E7F6-4ECD-B081-8A89BA5CBFB0}"
 EndProject
@@ -16,6 +16,13 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SignalR.Pipes.Common.Tests", "tests\SignalR.Pipes.Common.Tests\SignalR.Pipes.Common.Tests.csproj", "{2D34B227-07A5-4D74-B859-DE2535FB8CB7}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SignalR.Pipes.IntegrationTests", "tests\SignalR.Pipes.IntegrationTests\SignalR.Pipes.IntegrationTests.csproj", "{721AD078-960C-4B7A-A9C8-59D3174A723F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{9644BFDE-5396-44E9-BE99-40651446046D}"
+	ProjectSection(SolutionItems) = preProject
+		build\dependencies.props = build\dependencies.props
+		build\key.snk = build\key.snk
+		version.props = version.props
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

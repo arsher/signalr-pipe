@@ -7,15 +7,23 @@ using System.Threading.Tasks;
 
 namespace SignalR.Pipes.Client
 {
+    /// <summary>
+    /// A factory for creating named pipe connection instances.
+    /// </summary>
     public sealed class NamedPipeConnectionFactory : IConnectionFactory
     {
         private NamedPipeConnectionOptions Options { get; }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="options">The connection options.</param>
         public NamedPipeConnectionFactory(IOptions<NamedPipeConnectionOptions> options)
         {
             this.Options = options?.Value ?? throw new ArgumentNullException(nameof(options));
         }
 
+        /// <inheritdoc />
         public async Task<ConnectionContext> ConnectAsync(TransferFormat transferFormat, CancellationToken cancellationToken = default)
         {
             var connection = new NamedPipeConnection(Options);
@@ -31,6 +39,7 @@ namespace SignalR.Pipes.Client
             }
         }
 
+        /// <inheritdoc />
         public Task DisposeAsync(ConnectionContext connection)
         {
             return ((NamedPipeConnection)connection).DisposeAsync();

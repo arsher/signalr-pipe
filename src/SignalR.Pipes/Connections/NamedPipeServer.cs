@@ -1,8 +1,9 @@
-﻿using Microsoft.Extensions.Logging;
+﻿    using Microsoft.Extensions.Logging;
 using System;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
+using System.Text;
 #if !NETSTANDARD2_0
 using System.Security.AccessControl;
 using System.Security.Principal;
@@ -13,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace SignalR.Pipes.Connections
 {
-    public sealed class NamedPipeServer
+    internal sealed class NamedPipeServer
     {
         public const string PipePrefix = "signalr-";
 
@@ -123,6 +124,10 @@ namespace SignalR.Pipes.Connections
                     await nextClientTask.ConfigureAwait(false);
                 }
             }
+            catch(OperationCanceledException)
+            {
+                startTcs.TrySetCanceled();
+            }
             catch (Exception e)
             {
                 //needs to run first to avoid deadlock
@@ -170,6 +175,7 @@ namespace SignalR.Pipes.Connections
                     await writer.WriteLineAsync(actualPipeName).ConfigureAwait(false);
                     await pipeStream.FlushAsync(cancellationToken).ConfigureAwait(false);
                 }
+
             }
             finally
             {

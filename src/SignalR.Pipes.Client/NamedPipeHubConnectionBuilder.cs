@@ -4,12 +4,20 @@ using System;
 
 namespace SignalR.Pipes.Client
 {
+    /// <summary>
+    /// A builder for configuring <see cref="HubConnection"/> instances that will use 
+    /// named pipe based transport.
+    /// </summary>
     public class NamedPipeHubConnectionBuilder : IHubConnectionBuilder
     {
         private bool hubConnectionBuilt;
 
+        /// <inheritdoc />
         public IServiceCollection Services { get; }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="NamedPipeHubConnectionBuilder"/> class.
+        /// </summary>
         public NamedPipeHubConnectionBuilder()
         {
             Services = new ServiceCollection();
@@ -19,6 +27,7 @@ namespace SignalR.Pipes.Client
             this.AddJsonProtocol();
         }
 
+        /// <inheritdoc />
         public HubConnection Build()
         {
             // Build can only be used once

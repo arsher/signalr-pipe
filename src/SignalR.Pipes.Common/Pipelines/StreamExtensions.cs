@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace SignalR.Pipes.Common.Pipelines
 {
-    public static class StreamExtensions
+    internal static class StreamExtensions
     {
         private class DuplexPipe : IDuplexPipe
         {

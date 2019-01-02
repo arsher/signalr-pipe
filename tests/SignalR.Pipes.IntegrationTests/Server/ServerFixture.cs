@@ -1,23 +1,25 @@
 ﻿using System;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using SignalR.Pipes.Configuration;
 
 namespace SignalR.Pipes.IntegrationTests.Server
 {
     public class ServerFixture : IDisposable
     {
         private readonly IHost host;
-        private IDisposable disposable;
-
 
         public ServerFixture()
         {
             host = new HostBuilder()
-                .UseDisposableLifetime(d => disposable = d)
+                .UseHostUri(new Uri("signalr.pipe://testhost/"))
+                .UseSignalR(b =>
+                {
+                    b.MapHub<TestHub>("/testpath/net");
+                })
                 .ConfigureServices(collection =>
                 {
-                    collection.AddSignalR()
-                        .AddHub<TestHub>("signalr.pipe://testhost/testpath/net");
+                    collection.AddSignalR();
                 })
                 .Build();
 
@@ -26,7 +28,7 @@ namespace SignalR.Pipes.IntegrationTests.Server
 
         public void Dispose()
         {
-            disposable.Dispose();
+            host.StopAsync().Wait();
         }
     }
 }

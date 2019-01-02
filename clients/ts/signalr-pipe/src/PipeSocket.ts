@@ -3,6 +3,7 @@ import { Socket } from "net";
 import { Readable, Duplex } from "stream";
 import { createInterface } from "readline";
 import { Arg } from "./Util";
+import { TextTransform } from "./TextTransform";
 
 export class PipeSocket implements ISocket {
     private readonly socket: Socket;
@@ -90,6 +91,24 @@ export class PipeSocket implements ISocket {
             }
         });
         return result;
+    }
+
+    public async readString(): Promise<string> {
+        return new Promise<string>((resolve, reject) => {
+            if (!this.rejectIfDisposed(reject)) {
+                let closeHandler: ((hadError: boolean) => void) | null = null;
+                closeHandler = (_hadError: boolean) => {
+                    this.socket.removeListener("close", closeHandler!);
+                    reject(this.lastError);
+                };
+
+                this.socket.on("close", closeHandler);
+                this.socket.pipe(new TextTransform()).on("data", d =>{
+                    this.socket.unpipe();
+                    resolve(d);
+                });
+            }
+        });
     }
 
     public disconnect(): void {

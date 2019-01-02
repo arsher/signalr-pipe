@@ -12,7 +12,7 @@ namespace SignalR.Pipes.Common
         }
 
         [Fact]
-        public void UriValidationSuccessful()
+        public void UriValidationForSchemeSuccessful()
         {
             PipeUri.Validate(new Uri("signalr.pipe://localhost"));
         }
@@ -20,7 +20,7 @@ namespace SignalR.Pipes.Common
         [Fact]
         public void ShortUriNameGenerated()
         {
-            const string expected = "signalr.pipe_Ec2lnbmFsci5waXBlOi8vTE9DQUxIT1NULw==";
+            const string expected = "signalr.pipe_Ec2lnbmFsci5waXBlOi8vTE9DQUxIT1NU";
             var uri = new Uri("signalr.pipe://localhost");
 
             var actual = PipeUri.GetAcceptorName(uri);

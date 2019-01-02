@@ -7,11 +7,14 @@ function runJest(): Promise<number> {
     const jestPath = path.resolve(__dirname, "..", "..", "common", "node_modules", "jest", "bin", "jest.js");
     const configPath = path.resolve(__dirname, "..", "func.jest.config.js");
 
+    console.log("Starting Node tests using Jest.");
+
     // tslint:disable-next-line:variable-name
     return new Promise<number>((resolve, _reject) => {
         const p = exec(`"${process.execPath}" "${jestPath}" --config "${configPath}"`, {},
             // tslint:disable-next-line:variable-name
             (error: any, _stdout, _stderr) => {
+                console.log("Finished Node tests.");
                 if (error) {
                     console.log(error.message);
                     return resolve(error.code);
@@ -77,7 +80,9 @@ const configuration = "Debug";
         process.on("SIGINT", cleanup);
         process.on("exit", cleanup);
 
+        console.log("Waiting for Functional Test Server to start");
         await waitForHostStarted(dotnetProcess);
+        console.log("Functional Test Server has started");
 
         const jestExit = await runJest();
 

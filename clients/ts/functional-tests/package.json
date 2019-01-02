@@ -9,7 +9,9 @@
   "author": "",
   "license": "Apache-2.0",
   "devDependencies": {
-    "ts-node": "^7.0.1"
+    "@types/node": "^9.6.28",
+    "ts-node": "^7.0.1",
+    "typescript": "^3.2.2"
   },
   "dependencies": {
     "@aspnet/signalr": "^1.1.0",

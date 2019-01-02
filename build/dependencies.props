@@ -1,0 +1,11 @@
+<Project>
+  <PropertyGroup Label="Package Versions">
+    <SystemBuffersVersion>4.5.0</SystemBuffersVersion>
+    <SystemIoPipelinesVersion>4.5.2</SystemIoPipelinesVersion>
+    <SystemMemoryVersion>4.5.1</SystemMemoryVersion>
+    <MicrosoftAspNetCoreSignalrCoreVersion>1.1.0</MicrosoftAspNetCoreSignalrCoreVersion>
+    <MicrosoftAspNetCoreSignalrClientCoreVersion>1.1.0</MicrosoftAspNetCoreSignalrClientCoreVersion>
+    <MicrosoftAspNetCoreConnectionsAbstractionsVersion>2.2.0</MicrosoftAspNetCoreConnectionsAbstractionsVersion>
+    <MicrosoftExtensionsHostingAbstractionsVersion>2.2.0</MicrosoftExtensionsHostingAbstractionsVersion>
+  </PropertyGroup>
+</Project>
