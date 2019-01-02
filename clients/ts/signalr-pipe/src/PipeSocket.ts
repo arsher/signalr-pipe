@@ -4,6 +4,7 @@ import { Readable, Duplex } from "stream";
 import { createInterface } from "readline";
 import { Arg } from "./Util";
 import { TextTransform } from "./TextTransform";
+import { TextMessageFormat } from "./TextMessageFormat";
 
 export class PipeSocket implements ISocket {
     private readonly socket: Socket;
@@ -105,7 +106,8 @@ export class PipeSocket implements ISocket {
                 this.socket.on("close", closeHandler);
                 this.socket.pipe(new TextTransform()).on("data", d =>{
                     this.socket.unpipe();
-                    resolve(d);
+                    const messages = TextMessageFormat.parse(d.toString());
+                    resolve(messages[0]);
                 });
             }
         });

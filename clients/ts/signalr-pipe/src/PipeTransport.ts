@@ -12,19 +12,19 @@ export class PipeTransport implements ITransport {
     private transform?: MessageTransform;
     private handshakeDone: boolean = false;
     private connectPromise?: Promise<void>;
-    private connectResolve?: () => void; 
+    private connectResolve?: () => void;
 
     onreceive: ((data: string | ArrayBuffer) => void) | null;
     onclose: ((error?: Error | undefined) => void) | null;
 
-    constructor(private readonly pipeFactory: () => ISocket, 
+    constructor(private readonly pipeFactory: () => ISocket,
         private readonly transferFormat: TransferFormat) {
         this.onreceive = null;
         this.onclose = null;
     }
 
     public async connect(url: URL): Promise<void> {
-        if(!this.connectPromise) {
+        if (!this.connectPromise) {
             this.connectPromise = this.connectInternal(url);
         }
         return this.connectPromise;
@@ -61,7 +61,7 @@ export class PipeTransport implements ITransport {
         await this.socket.send(TextMessageFormat.write(PipeTransport.extractRoutePart(url)));
 
         const beforeHandshakeStream = this.socket.stream.pipe(new TextTransform());
-        beforeHandshakeStream.on("data", this.socketOnDataBeforeHandshake.bind(this));            
+        beforeHandshakeStream.on("data", this.socketOnDataBeforeHandshake.bind(this));
 
         this.socket.onclose = this.onclose;
 
@@ -71,7 +71,7 @@ export class PipeTransport implements ITransport {
     }
 
     private socketOnDataBeforeHandshake(_data: string) {
-        if(!this.handshakeDone) {
+        if (!this.handshakeDone) {
             this.handshakeDone = true;
 
             this.socket!.stream.unpipe();
@@ -96,7 +96,7 @@ export class PipeTransport implements ITransport {
                 const strData = data.toString();
                 this.onreceive(strData);
             } else if (data instanceof Buffer) {
-                if(data.length === 3 && this.transferFormat === TransferFormat.Binary) {
+                if (data.length === 3 && this.transferFormat === TransferFormat.Binary) {
                     this.transform!.enabled = true;
                 }
                 this.onreceive(data)
@@ -112,7 +112,7 @@ export class PipeTransport implements ITransport {
         const pipe = this.pipeFactory();
         try {
             await pipe.connect(pipeName);
-            return await pipe.readLine();
+            return await pipe.readString();
         } finally {
             pipe.disconnect();
         }
@@ -122,7 +122,7 @@ export class PipeTransport implements ITransport {
         return uri.pathname;
     }
 
-    private static extractPipePart(uri: URL) : string {
+    private static extractPipePart(uri: URL): string {
         return `${uri.protocol}//${uri.hostname}`;
     }
 

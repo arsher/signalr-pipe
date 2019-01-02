@@ -9,6 +9,7 @@ export interface ISocket {
     connect(path: string): Promise<void>;
     send(data: string | ArrayBuffer): Promise<void>;
     readLine(): Promise<string>;
+    readString(): Promise<string>;
    // handshakeDone(): void;
     disconnect(): void;
 }

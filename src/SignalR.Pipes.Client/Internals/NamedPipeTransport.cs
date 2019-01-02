@@ -122,10 +122,30 @@ namespace SignalR.Pipes.Client
             {
                 await negotiator.ConnectAsync();
 
-                using (var reader = new StreamReader(negotiator))
+                var pipeReader = negotiator.AsPipeReader();
+                while(true)
                 {
-                    return await reader.ReadLineAsync();
+                    var readResult = await pipeReader.ReadAsync();
+                    var buffer = readResult.Buffer;
+                    var consumed = buffer.Start;
+
+                    try
+                    {
+                        if(!buffer.IsEmpty && TextMessageParser.TryParseStringMessage(ref buffer, out var actualPipeName))
+                        {
+                            return actualPipeName;
+                        }
+                    }
+                    finally
+                    {
+                        pipeReader.AdvanceTo(consumed);
+                    }
                 }
+
+                //using (var reader = new StreamReader(negotiator))
+                //{
+                //    return await reader.ReadLineAsync();
+                //}
             }
         }
 

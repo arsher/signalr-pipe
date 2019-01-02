@@ -1,4 +1,6 @@
-﻿    using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
+using SignalR.Pipes.Common.Messaging;
+using SignalR.Pipes.Common.Pipelines;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -23,7 +25,7 @@ namespace SignalR.Pipes.Connections
 
         private readonly SemaphoreSlim negotiatorLock = new SemaphoreSlim(MaxNegotiator, MaxNegotiator);
         private readonly SemaphoreSlim stateLock = new SemaphoreSlim(1, 1);
-        private readonly TaskCompletionSource<object> startTcs = 
+        private readonly TaskCompletionSource<object> startTcs =
             new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
         private readonly CancellationTokenSource disposeCts = new CancellationTokenSource();
 #if !NETSTANDARD2_0
@@ -37,7 +39,7 @@ namespace SignalR.Pipes.Connections
         private bool disposed;
         private bool started;
 
-        public NamedPipeServer(string pipeName,  ILoggerFactory loggerFactory,
+        public NamedPipeServer(string pipeName, ILoggerFactory loggerFactory,
             Func<NamedPipeServerStream, CancellationToken, Task> onConnected)
         {
             this.pipeName = pipeName;
@@ -124,7 +126,7 @@ namespace SignalR.Pipes.Connections
                     await nextClientTask.ConfigureAwait(false);
                 }
             }
-            catch(OperationCanceledException)
+            catch (OperationCanceledException)
             {
                 startTcs.TrySetCanceled();
             }
@@ -149,39 +151,52 @@ namespace SignalR.Pipes.Connections
             await negotiatorLock.WaitAsync().ConfigureAwait(false);
             try
             {
-#if !NETSTANDARD2_0
-                pipeStream = new NamedPipeServerStream(pipeName, PipeDirection.Out, MaxNegotiator,
-                    PipeTransmissionMode.Byte, PipeOptions.Asynchronous, 512, 512, pipeSecurity, HandleInheritability.None);
-#else
-                pipeStream = new NamedPipeServerStream(pipeName, PipeDirection.Out, MaxNegotiator,
-                    PipeTransmissionMode.Byte, PipeOptions.Asynchronous, 512, 512);
-#endif
+                pipeStream = CreateNegotiatorStream();
                 await pipeStream.WaitForConnectionAsync(cancellationToken).ConfigureAwait(false);
 
                 var actualPipeName = GetActualPipeName();
+                var actualPipe = CreateStream(actualPipeName);
 
-#if !NETSTANDARD2_0
-                var actualPipe = new NamedPipeServerStream(actualPipeName, PipeDirection.InOut, 1,
-                    PipeTransmissionMode.Byte, PipeOptions.Asynchronous, 512, 512, pipeSecurity, HandleInheritability.None);
-#else
-                var actualPipe = new NamedPipeServerStream(actualPipeName, PipeDirection.InOut, 1,
-                    PipeTransmissionMode.Byte, PipeOptions.Asynchronous, 512, 512);
-#endif
-
-                _ = ProcessClientAsync(actualPipe, cancellationToken);
-
-                using (var writer = new StreamWriter(pipeStream))
+                var pipeWriter = pipeStream.AsPipeWriter();
+                pipeWriter.WriteString(actualPipeName);
+                var flushResult = await pipeWriter.FlushAsync(disposeCts.Token).ConfigureAwait(false);
+                if (!flushResult.IsCompleted)
                 {
-                    await writer.WriteLineAsync(actualPipeName).ConfigureAwait(false);
-                    await pipeStream.FlushAsync(cancellationToken).ConfigureAwait(false);
+                    await StartProcessClientAsync(actualPipe);
                 }
-
+                else
+                {
+                    DisposeClosePipe(actualPipe);
+                    logger.LogError("Client closed before sending actual pipe name.");
+                }
             }
             finally
             {
                 DisposeClosePipe(pipeStream);
                 negotiatorLock.Release();
             }
+        }
+
+        private NamedPipeServerStream CreateStream(string actualPipeName)
+        {
+#if !NETSTANDARD2_0
+            return new NamedPipeServerStream(actualPipeName, PipeDirection.InOut, 1,
+                PipeTransmissionMode.Byte, PipeOptions.Asynchronous, 512, 512, pipeSecurity, HandleInheritability.None);
+#else
+            return new NamedPipeServerStream(actualPipeName, PipeDirection.InOut, 1,
+                PipeTransmissionMode.Byte, PipeOptions.Asynchronous, 512, 512);
+#endif
+        }
+
+        private NamedPipeServerStream CreateNegotiatorStream()
+        {
+#if !NETSTANDARD2_0
+            return new NamedPipeServerStream(pipeName, PipeDirection.Out, MaxNegotiator,
+                PipeTransmissionMode.Byte, PipeOptions.Asynchronous, 512, 512, pipeSecurity, HandleInheritability.None);
+#else
+            return new NamedPipeServerStream(pipeName, PipeDirection.Out, MaxNegotiator,
+                PipeTransmissionMode.Byte, PipeOptions.Asynchronous, 512, 512);
+#endif
         }
 
         private static void DisposeClosePipe(NamedPipeServerStream pipeStream)
@@ -193,12 +208,12 @@ namespace SignalR.Pipes.Connections
             pipeStream?.Dispose();
         }
 
-        private async Task ProcessClientAsync(NamedPipeServerStream actualPipe, CancellationToken cancellationToken)
+        private async Task StartProcessClientAsync(NamedPipeServerStream actualPipe)
         {
             try
             {
                 using (var cts = new CancellationTokenSource())
-                using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cts.Token, cancellationToken))
+                using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cts.Token, disposeCts.Token))
                 {
                     if (!Debugger.IsAttached)
                     {
@@ -208,12 +223,25 @@ namespace SignalR.Pipes.Connections
                     await actualPipe.WaitForConnectionAsync(linkedCts.Token).ConfigureAwait(false);
                 }
 
+                ProcessClientAsync(actualPipe, disposeCts.Token);
+            }
+            catch (Exception e)
+            {
+                logger.LogError("StartProcessClientAsync", e);
+                DisposeClosePipe(actualPipe);
+            }
+        }
+
+        private async void ProcessClientAsync(NamedPipeServerStream actualPipe, CancellationToken cancellationToken)
+        {
+            try
+            {
                 var connectTask = onConnected?.Invoke(actualPipe, cancellationToken) ?? Task.CompletedTask;
                 await connectTask.ConfigureAwait(false);
             }
             catch (Exception e)
             {
-                logger.LogError("ProcessClientAsync", e); 
+                logger.LogError("ProcessClientAsync", e);
             }
             finally
             {

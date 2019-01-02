@@ -33,7 +33,7 @@ namespace SignalR.Pipes.Common.Pipelines
             return new DuplexPipe(stream.AsPipeReader(cancellationToken), stream.AsPipeWriter(cancellationToken));
         }
 
-        private static PipeReader AsPipeReader(this Stream stream, CancellationToken cancellationToken = default)
+        public static PipeReader AsPipeReader(this Stream stream, CancellationToken cancellationToken = default)
         {
             if (!stream.CanRead)
             {
@@ -45,7 +45,7 @@ namespace SignalR.Pipes.Common.Pipelines
             return pipe.Reader;
         }
 
-        private static PipeWriter AsPipeWriter(this Stream stream, CancellationToken cancellationToken = default)
+        public static PipeWriter AsPipeWriter(this Stream stream, CancellationToken cancellationToken = default)
         {
             if (!stream.CanWrite)
             {
