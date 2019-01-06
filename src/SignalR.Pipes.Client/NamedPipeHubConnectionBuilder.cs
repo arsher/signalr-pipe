@@ -47,8 +47,12 @@ namespace SignalR.Pipes.Client
                 throw new InvalidOperationException($"Cannot create {nameof(HubConnection)} instance. An {nameof(IConnectionFactory)} was not configured.");
             }
 
-            return serviceProvider.GetService<HubConnection>();
+            return BuildInternal(serviceProvider);
         }
 
+        protected virtual HubConnection BuildInternal(ServiceProvider serviceProvider)
+        {
+            return serviceProvider.GetService<HubConnection>();
+        }
     }
 }

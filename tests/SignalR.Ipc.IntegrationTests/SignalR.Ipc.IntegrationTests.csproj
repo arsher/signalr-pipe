@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net461</TargetFramework>
+
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client.Core" Version="1.1.0" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Core" Version="1.1.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="2.2.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.9.0" />
+    <PackageReference Include="xunit" Version="2.4.0" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\SignalR.Pipes.Ipc.Client\SignalR.Pipes.Ipc.Client.csproj" />
+    <ProjectReference Include="..\..\src\SignalR.Pipes.Client\SignalR.Pipes.Client.csproj" />
+    <ProjectReference Include="..\..\src\SignalR.Pipes.Common\SignalR.Pipes.Common.csproj" />
+    <ProjectReference Include="..\..\src\SignalR.Pipes.Ipc\SignalR.Pipes.Ipc.csproj" />
+    <ProjectReference Include="..\..\src\SignalR.Pipes\SignalR.Pipes.csproj" />
+  </ItemGroup>
+
+</Project>

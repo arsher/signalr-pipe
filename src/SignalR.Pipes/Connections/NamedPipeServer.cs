@@ -5,7 +5,6 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
-using System.Text;
 #if !NETSTANDARD2_0
 using System.Security.AccessControl;
 using System.Security.Principal;

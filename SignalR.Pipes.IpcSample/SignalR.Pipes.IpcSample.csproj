@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net461</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Autofac" Version="4.8.1" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Core" Version="1.1.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="2.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SignalR.Pipes.IpcSample.Child\SignalR.Pipes.IpcSample.Child.csproj" />
+    <ProjectReference Include="..\src\SignalR.Pipes.Ipc\SignalR.Pipes.Ipc.csproj" />
+    <ProjectReference Include="..\src\SignalR.Pipes\SignalR.Pipes.csproj" />
+  </ItemGroup>
+
+</Project>
