@@ -68,9 +68,10 @@
       <SolutionsInBuild Include="$(MSBuildThisFileDirectory)..\SignalR.Pipes.sln" />
     </ItemGroup>
 
-    <Exec Command="dotnet msbuild -t:Build -p:IsCI=true -p:BUILD_NUMBER=$(BUILD_NUMBER) @(SolutionsInBuild)" />
+    <Exec Command="dotnet msbuild -t:restore;Build -p:IsCI=true -p:BUILD_NUMBER=$(BUILD_NUMBER) @(SolutionsInBuild)" />
     
     <Exec Command="dotnet test --no-build @(SolutionsInBuild)" />
+    <Exec Command="dotnet restore" WorkingDirectory="$(RepositoryRoot)clients/ts/functional-tests/app" />
     <Exec Command="dotnet build" WorkingDirectory="$(RepositoryRoot)clients/ts/functional-tests/app" />
     <Exec Command="npm run test" WorkingDirectory="$(RepositoryRoot)clients/ts/functional-tests" />
 
