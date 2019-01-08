@@ -16,14 +16,13 @@ using System.Threading.Tasks;
 
 namespace SignalR.Pipes.Connections
 {
-    internal sealed class NamedPipeServer
+    internal sealed partial class NamedPipeServer
     {
         public const string PipePrefix = "signalr-";
 
-        private const int MaxNegotiator = 5;
         private const int Timeout = 2000;
 
-        private readonly SemaphoreSlim negotiatorLock = new SemaphoreSlim(MaxNegotiator, MaxNegotiator);
+        private readonly SemaphoreSlim negotiatorLock = new SemaphoreSlim(1, 1);
         private readonly SemaphoreSlim stateLock = new SemaphoreSlim(1, 1);
         private readonly TaskCompletionSource<object> startTcs =
             new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -35,6 +34,8 @@ namespace SignalR.Pipes.Connections
         private readonly Func<NamedPipeServerStream, CancellationToken, Task> onConnected;
         private readonly string pipeName;
 
+        private readonly NamedPipeServerStream negotiatorStream;
+
         private Task loopTask;
         private bool disposed;
         private bool started;
@@ -45,6 +46,7 @@ namespace SignalR.Pipes.Connections
             this.pipeName = pipeName;
             this.onConnected = onConnected;
             this.logger = loggerFactory.CreateLogger<NamedPipeServer>();
+            negotiatorStream = CreateNegotiatorStream();
         }
 
         public async Task StartAsync()
@@ -132,6 +134,8 @@ namespace SignalR.Pipes.Connections
             }
             catch (Exception e)
             {
+                Log.LoopError(logger, e);
+
                 //needs to run first to avoid deadlock
                 if (!startTcs.Task.IsCompleted)
                 {
@@ -139,25 +143,24 @@ namespace SignalR.Pipes.Connections
                 }
 
                 await DisposeAsync().ConfigureAwait(false);
-
-                logger.LogError("LoopAsync", e);
             }
         }
 
         private async Task ProcessNextClientAsync(CancellationToken cancellationToken)
         {
-            NamedPipeServerStream pipeStream = null;
+            var pipeWriterCts = new CancellationTokenSource();
 
-            await negotiatorLock.WaitAsync().ConfigureAwait(false);
+            await negotiatorLock.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {
-                pipeStream = CreateNegotiatorStream();
-                await pipeStream.WaitForConnectionAsync(cancellationToken).ConfigureAwait(false);
+                await negotiatorStream.WaitForConnectionAsync(cancellationToken).ConfigureAwait(false);
+
+                Log.ClientConnected(logger);
 
                 var actualPipeName = GetActualPipeName();
                 var actualPipe = CreateStream(actualPipeName);
 
-                var pipeWriter = pipeStream.AsPipeWriter();
+                var pipeWriter = negotiatorStream.AsPipeWriter(pipeWriterCts.Token);
                 pipeWriter.WriteString(actualPipeName);
                 var flushResult = await pipeWriter.FlushAsync(disposeCts.Token).ConfigureAwait(false);
                 if (!flushResult.IsCompleted)
@@ -167,12 +170,21 @@ namespace SignalR.Pipes.Connections
                 else
                 {
                     DisposeClosePipe(actualPipe);
-                    logger.LogError("Client closed before sending actual pipe name.");
+
+                    Log.ClientDisconnectedBeforeHandshake(logger);
                 }
             }
             finally
             {
-                DisposeClosePipe(pipeStream);
+                Log.DisconnectingNegotiator(logger);
+
+                pipeWriterCts.Cancel();
+
+                if (negotiatorStream.IsConnected)
+                {
+                    negotiatorStream.Disconnect();
+                }
+
                 negotiatorLock.Release();
             }
         }
@@ -191,25 +203,27 @@ namespace SignalR.Pipes.Connections
         private NamedPipeServerStream CreateNegotiatorStream()
         {
 #if !NETSTANDARD2_0
-            return new NamedPipeServerStream(pipeName, PipeDirection.Out, MaxNegotiator,
+            return new NamedPipeServerStream(pipeName, PipeDirection.Out, NamedPipeServerStream.MaxAllowedServerInstances,
                 PipeTransmissionMode.Byte, PipeOptions.Asynchronous, 512, 512, pipeSecurity, HandleInheritability.None);
 #else
-            return new NamedPipeServerStream(pipeName, PipeDirection.Out, MaxNegotiator,
+            return new NamedPipeServerStream(pipeName, PipeDirection.Out, NamedPipeServerStream.MaxAllowedServerInstances,
                 PipeTransmissionMode.Byte, PipeOptions.Asynchronous, 512, 512);
 #endif
         }
 
         private static void DisposeClosePipe(NamedPipeServerStream pipeStream)
-        {
+        { 
             if (pipeStream?.IsConnected == true)
             {
-                pipeStream.Close();
+                pipeStream.Disconnect();
             }
             pipeStream?.Dispose();
         }
 
         private async Task StartProcessClientAsync(NamedPipeServerStream actualPipe)
         {
+            Log.StartingClientConnection(logger);
+
             try
             {
                 using (var cts = new CancellationTokenSource())
@@ -227,7 +241,7 @@ namespace SignalR.Pipes.Connections
             }
             catch (Exception e)
             {
-                logger.LogError("StartProcessClientAsync", e);
+                Log.ErrorWhileStartingClientConnection(logger, e);
                 DisposeClosePipe(actualPipe);
             }
         }
@@ -241,7 +255,7 @@ namespace SignalR.Pipes.Connections
             }
             catch (Exception e)
             {
-                logger.LogError("ProcessClientAsync", e);
+                Log.ErrorDuringClientProcess(logger, e);
             }
             finally
             {

@@ -1,0 +1,25 @@
+version: CI-{build}
+image: Visual Studio 2017
+environment:
+  node_version: '10'
+  IsCI: true
+  apikey:
+    secure: uz70X1rDufUiuaV59aw5GKHF6lLvRCe9QkBZQkjGaxwAP/LSuVHdRAdEwRIZhkai
+install:
+  - ps: Install-Product node $env:nodejs_version
+  - ps: '"//www.myget.org/F/dserfozo/npm/:_authToken=$env:apikey`n" | out-file "$env:userprofile\.npmrc" -Encoding ASCII'
+test_script:
+  - cmd: msbuild.exe /t:Test build\build.targets
+  - ps: build\publish_test_results.ps1
+artifacts:
+  - path: artifacts\logs
+    name: test logs
+    type: zip
+  - path: artifacts\packages\*.nupkg
+    name: nuget_packages
+  - path: artifacts\packages\*.tgz
+    name: npm_packages
+build_script:
+  - cmd: msbuild.exe /p:BUILD_NUMBER=CI%APPVEYOR_BUILD_NUMBER% /t:CI build\build.targets 
+deploy_script:
+  - ps: build\publish_packages.ps1

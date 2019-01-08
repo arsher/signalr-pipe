@@ -4,6 +4,6 @@
     <PropertyGroup>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <PackageTags>aspnetcore;signalr;namedpipe</PackageTags>
-        <PackageOutputPath>$(MSBuildThisFileDirectory)..\artifacts</PackageOutputPath>
+        <PackageOutputPath>$(MSBuildThisFileDirectory)..\artifacts\packages</PackageOutputPath>
     </PropertyGroup>
 </Project>

@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "pretest": "dotnet build app",
     "test": "ts-node --project ./scripts/tsconfig.json ./scripts/run-tests.ts"
   },
   "author": "",

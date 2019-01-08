@@ -2,7 +2,8 @@
   <PropertyGroup>
     <VersionPrefix>1.0.0</VersionPrefix>
     <VersionSuffix Condition="'$(IsCI)' == 'true'">$(BUILD_NUMBER)</VersionSuffix>
-    <VersionSuffix Condition=" '$(VersionSuffix)' == '' ">dev</VersionSuffix>
-    <PackageVersion>$(VersionPrefix)-$(VersionSuffix)</PackageVersion>
+    <VersionSuffix Condition="'$(VersionSuffix)' == '' and '$(IsRtm)' != true">dev</VersionSuffix>
+    <PackageVersion Condition="'$(VersionSuffix)' != ''">$(VersionPrefix)-$(VersionSuffix)</PackageVersion>
+    <PackageVersion Condition="'$(VersionSuffix)' == ''">$(VersionPrefix)</PackageVersion>
   </PropertyGroup>
 </Project>

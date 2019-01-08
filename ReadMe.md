@@ -1,5 +1,7 @@
 # signalr-pipe
 
+[![Build status](https://ci.appveyor.com/api/projects/status/cm01wuq8gul5h148/branch/master?svg=true)](https://ci.appveyor.com/project/SerfzDvid/signalr-pipe/branch/master)
+
 ## Purpose
 This is an experimental lib to make use of the connection abstractions in the ASP.NET Core version of SignalR. It aims to implement a named pipe based transport layer to be used as a form of IPC between .NET and/or Node processes. 
 
@@ -45,3 +47,18 @@ var connection = new NamedPipeHubConnectionBuilder()
 
 await connection.StartAsync();
 ```
+
+## Releases
+
+### CI Builds
+
+Every commit on master creates a new set of packages:
+
+- [![](https://img.shields.io/npm/v/signalr-pipe/latest.svg?registry_uri=https%3A%2F%2Fwww.myget.org%2FF%2Fdserfozo%2Fnpm%2F&label=signalr-pipe@node)](https://www.myget.org/feed/dserfozo/package/npm/signalr-pipe)
+- [![](https://img.shields.io/myget/dserfozo/vpre/Signalr.Pipes.Common.svg?label=SignalR.Pipes.Common)](https://www.myget.org/feed/dserfozo/package/nuget/SignalR.Pipes.Common)
+- [![](https://img.shields.io/myget/dserfozo/vpre/Signalr.Pipes.svg?label=SignalR.Pipes)](https://www.myget.org/feed/dserfozo/package/nuget/SignalR.Pipes)
+- [![](https://img.shields.io/myget/dserfozo/vpre/Signalr.Pipes.Client.svg?label=SignalR.Pipes.Client)](https://www.myget.org/feed/dserfozo/package/nuget/SignalR.Pipes.Client)
+
+### Stable
+
+There is no stable release at this point.

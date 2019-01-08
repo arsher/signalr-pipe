@@ -28,7 +28,7 @@ namespace SignalR.Pipes.Connections
         private static async Task<NamedPipeConnectionContext> HandshakeAsync(NamedPipeServerStream stream, CancellationToken cancellationToken)
         {
             var connectionId = MakeNewConnectionId();
-            var pipe = stream.AsDuplexPipe(cancellationToken);
+            var pipe = stream.AsDuplexPipe(/*cancellationToken*/);
             var hubName = string.Empty;
 
             try

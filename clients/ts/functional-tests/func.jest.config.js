@@ -7,6 +7,10 @@ module.exports = {
             }
         }
     },
+    reporters: [
+        "default",
+        ["../common/node_modules/jest-junit/index.js", { "output": "../../../artifacts/test-results/" + `${process.platform}` + ".node.functional.junit.xml" }]
+    ],
     transform: {
         "^.+\\.(jsx?|tsx?)$": "../common/node_modules/ts-jest"
     },

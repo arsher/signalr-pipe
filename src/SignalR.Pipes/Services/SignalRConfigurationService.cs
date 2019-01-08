@@ -15,27 +15,37 @@ namespace SignalR.Pipes.Services
 {
     internal sealed class SignalRConfigurationService : IHostedService
     {
+        private readonly ILogger logger;
         private readonly HostOptions hostOptions;
         private readonly IServiceProvider serviceProvider;
         private NamedPipeServer pipeServer;
 
-        public SignalRConfigurationService(IServiceProvider serviceProvider, IOptions<HostOptions> hostOptions)
+        public SignalRConfigurationService(IServiceProvider serviceProvider, ILoggerFactory loggerFactory, IOptions<HostOptions> hostOptions)
         {
             this.serviceProvider = serviceProvider;
             this.hostOptions = hostOptions.Value;
+            this.logger = loggerFactory.CreateLogger(typeof(SignalRConfigurationService));
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
+            logger.LogTrace("Starting...");
+
             var pipeName = PipeUri.GetAcceptorName(hostOptions.Uri);
             pipeServer = new NamedPipeServer(pipeName, serviceProvider.GetRequiredService<ILoggerFactory>(), BuildRequestPipeline());
 
             await pipeServer.StartAsync().ConfigureAwait(false);
+
+            logger.LogTrace("Started...");
         }
 
         public async Task StopAsync(CancellationToken cancellationToken)
         {
+            logger.LogTrace("Stopping...");
+
             await (pipeServer?.DisposeAsync() ?? Task.CompletedTask).ConfigureAwait(false);
+
+            logger.LogTrace("Stopped...");
         }
 
         private Func<NamedPipeServerStream, CancellationToken, Task> BuildRequestPipeline()

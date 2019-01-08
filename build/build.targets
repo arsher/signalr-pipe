@@ -10,7 +10,8 @@
 
   <PropertyGroup>
     <RepositoryRoot>$(MSBuildThisFileDirectory)..\</RepositoryRoot>
-    <PackageOutputPath>$(MSBuildThisFileDirectory)..\artifacts</PackageOutputPath>
+    <PackageOutputPath>$(MSBuildThisFileDirectory)..\artifacts\packages</PackageOutputPath>
+    <TestResultsPath>$(MSBuildThisFileDirectory)..\artifacts\test-results</TestResultsPath>
   </PropertyGroup>
 
   <Target Name="RestoreNpm">
@@ -43,7 +44,7 @@
     </ItemGroup>
   </Target>
 
-  <Target Name="RunTSClientNodeTests" DependsOnTargets="RestoreNpm">
+  <Target Name="RunTSClientNodeTests">
     <Message Text="Running JavaScript client Node tests" Importance="high" />
     <Exec Command="npm run test" WorkingDirectory="$(RepositoryRoot)clients/ts" />
   </Target>
@@ -63,18 +64,17 @@
     <Move SourceFiles="%(NPMPackage.PackageJson).bak" DestinationFiles="%(NPMPackage.PackageJson)" />
   </Target>
 
-  <Target Name="CI" DependsOnTargets="BuildNPMPackages;RunTSClientNodeTests;PackNPMPackages">
-    <ItemGroup>
-      <SolutionsInBuild Include="$(MSBuildThisFileDirectory)..\SignalR.Pipes.sln" />
-    </ItemGroup>
-
-    <Exec Command="dotnet msbuild -t:restore;Build -p:IsCI=true -p:BUILD_NUMBER=$(BUILD_NUMBER) @(SolutionsInBuild)" />
-    
-    <Exec Command="dotnet test --no-build @(SolutionsInBuild)" />
-    <Exec Command="dotnet restore" WorkingDirectory="$(RepositoryRoot)clients/ts/functional-tests/app" />
-    <Exec Command="dotnet build" WorkingDirectory="$(RepositoryRoot)clients/ts/functional-tests/app" />
+  <ItemGroup>
+    <SolutionsInBuild Include="$(MSBuildThisFileDirectory)..\SignalR.Pipes.sln" />
+  </ItemGroup>
+  
+  <Target Name="Test" DependsOnTargets="RunTSClientNodeTests">
+    <Exec Command="dotnet test --no-build --logger trx;LogFileName=dotnet.tests.trx --results-directory $(TestResultsPath) @(SolutionsInBuild)" />
     <Exec Command="npm run test" WorkingDirectory="$(RepositoryRoot)clients/ts/functional-tests" />
-
-    <Exec Command="dotnet msbuild -t:Pack -p:IsCI=true -p:BUILD_NUMBER=$(BUILD_NUMBER) @(SolutionsInBuild)" />
+  </Target>
+  
+  <Target Name="CI" DependsOnTargets="BuildNPMPackages;RunTSClientNodeTests;PackNPMPackages">
+    <Exec Command="dotnet build -p:IsCI=true -p:BUILD_NUMBER=$(BUILD_NUMBER) @(SolutionsInBuild)" />
+    <Exec Command="dotnet pack -p:IsCI=true -p:BUILD_NUMBER=$(BUILD_NUMBER) @(SolutionsInBuild)" />
   </Target>
 </Project>

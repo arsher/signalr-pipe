@@ -2,7 +2,7 @@ import { PipeHubConnectionBuilder } from "signalr-pipe";
 import { HubConnectionState, JsonHubProtocol, IHubProtocol } from "@aspnet/signalr";
 import { MessagePackHubProtocol } from "@aspnet/signalr-protocol-msgpack";
 
-describe.each([new JsonHubProtocol(), new MessagePackHubProtocol()])("Complex", (protocol: IHubProtocol) => {
+describe.each([new JsonHubProtocol(), new MessagePackHubProtocol()])("Basic protocol tests", (protocol: IHubProtocol) => {
     it(`Should connect to test hub (${protocol.name})`, async () => {
         const hubConnection = new PipeHubConnectionBuilder()
             .withUrl("signalr.pipe://testhost/testpath")
