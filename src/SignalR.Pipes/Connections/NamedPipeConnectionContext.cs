@@ -6,7 +6,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO.Pipelines;
 using System.Security.Claims;
-using System.Threading.Tasks;
 
 namespace SignalR.Pipes.Connections
 {

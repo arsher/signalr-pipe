@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
+using System.IO;
 using Xunit;
 
 namespace SignalR.Pipes.IntegrationTests.Server
@@ -11,7 +12,7 @@ namespace SignalR.Pipes.IntegrationTests.Server
         [Fact]
         public void CantHostOnSameName()
         {
-            Assert.Throws<UnauthorizedAccessException>(() =>
+            Assert.Throws<IOException>(() =>
             {
                 var host = new HostBuilder()
                               .UseHostUri(new Uri("signalr.pipe://testhost/"))

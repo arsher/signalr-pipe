@@ -3,14 +3,7 @@ using SignalR.Pipes.Common.Messaging;
 using SignalR.Pipes.Common.Pipelines;
 using System;
 using System.Diagnostics;
-using System.IO;
 using System.IO.Pipes;
-using System.Text;
-#if !NETSTANDARD2_0
-using System.Security.AccessControl;
-using System.Security.Principal;
-using SignalR.Pipes.Internal;
-#endif
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -27,9 +20,6 @@ namespace SignalR.Pipes.Connections
         private readonly TaskCompletionSource<object> startTcs =
             new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
         private readonly CancellationTokenSource disposeCts = new CancellationTokenSource();
-#if !NETSTANDARD2_0
-        private readonly PipeSecurity pipeSecurity = CreatePipeSecurity();
-#endif
         private readonly ILogger logger;
         private readonly Func<NamedPipeServerStream, CancellationToken, Task> onConnected;
         private readonly string pipeName;
@@ -191,24 +181,12 @@ namespace SignalR.Pipes.Connections
 
         private NamedPipeServerStream CreateStream(string actualPipeName)
         {
-#if !NETSTANDARD2_0
-            return new NamedPipeServerStream(actualPipeName, PipeDirection.InOut, 1,
-                PipeTransmissionMode.Byte, PipeOptions.Asynchronous, 512, 512, pipeSecurity, HandleInheritability.None);
-#else
-            return new NamedPipeServerStream(actualPipeName, PipeDirection.InOut, 1,
-                PipeTransmissionMode.Byte, PipeOptions.Asynchronous, 512, 512);
-#endif
+            return new NamedPipeServerStream(actualPipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous, 512, 512);
         }
 
         private NamedPipeServerStream CreateNegotiatorStream()
         {
-#if !NETSTANDARD2_0
-            return new NamedPipeServerStream(pipeName, PipeDirection.Out, NamedPipeServerStream.MaxAllowedServerInstances,
-                PipeTransmissionMode.Byte, PipeOptions.Asynchronous, 512, 512, pipeSecurity, HandleInheritability.None);
-#else
-            return new NamedPipeServerStream(pipeName, PipeDirection.Out, NamedPipeServerStream.MaxAllowedServerInstances,
-                PipeTransmissionMode.Byte, PipeOptions.Asynchronous, 512, 512);
-#endif
+            return new NamedPipeServerStream(pipeName, PipeDirection.Out, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous, 512, 512);
         }
 
         private static void DisposeClosePipe(NamedPipeServerStream pipeStream)
@@ -275,18 +253,5 @@ namespace SignalR.Pipes.Connections
         {
             return $"{PipePrefix}{Guid.NewGuid():N}";
         }
-
-#if !NETSTANDARD2_0
-        private static PipeSecurity CreatePipeSecurity()
-        {
-            var logonSid = SecurityUtility.GetLogonSidForPid(Process.GetCurrentProcess().Id);
-            var pipeSecurity = new PipeSecurity();
-            pipeSecurity.AddAccessRule(new PipeAccessRule(new SecurityIdentifier(WellKnownSidType.NetworkSid, null),
-                PipeAccessRights.ReadWrite, AccessControlType.Deny));
-            pipeSecurity.AddAccessRule(new PipeAccessRule(new SecurityIdentifier(WellKnownSidType.WorldSid, null), PipeAccessRights.ReadWrite, AccessControlType.Allow));
-            pipeSecurity.AddAccessRule(new PipeAccessRule(logonSid, PipeAccessRights.ReadWrite, AccessControlType.Allow));
-            return pipeSecurity;
-        }
-#endif
     }
 }
