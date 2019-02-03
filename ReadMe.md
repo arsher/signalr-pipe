@@ -41,11 +41,12 @@ await connection.StartAsync();
 #### NodeJS
 
 ```javascript
-var connection = new NamedPipeHubConnectionBuilder()
-                .WithUri("signalr.pipe://testhost/testpath/net")
-                .Build();
+const hubConnection = new PipeHubConnectionBuilder()
+            .withUrl("signalr.pipe://testhost/testpath")
+            .withHubProtocol(protocol)
+            .build();
 
-await connection.StartAsync();
+await hubConnection.start();
 ```
 
 ## Releases
