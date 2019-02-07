@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <Description>Client for SignalR Named Pipe Transport</Description>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFrameworks>net461;netstandard2.0</TargetFrameworks>
     <LangVersion>7.3</LangVersion>
     <DisablePackageAssetsCache>true</DisablePackageAssetsCache>
   </PropertyGroup>
